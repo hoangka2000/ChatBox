@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" 
+          content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+    <link rel="stylesheet" href="./static/style.css">
+</head>
+
+<body>
+    <div class="chatBot">
+        <header>
+            <h2>ChatBot</h2>
+            <span alt="Close" 
+                  id="cross" 
+                  onclick="cancel()">X</span>
+        </header>
+        <ul class="chatbox">
+            <li class="chat-ingoing chat">
+                <p>Hey! tôi có thể giúp j cho bạn?</p>
+            </li>
+        </ul>
+        <div class="chat-input">
+            <textarea rows="0" cols="17"
+                      placeholder="Enter a message..." id ="message-input"></textarea>
+            <button id="sendBTN">Send</button>
+        </div>
+    </div>
+    <script>
+        
+        const chatBox = document.querySelector(".chatbox");
+        const messageInput = document.querySelector("#message-input");
+        const sendBtn = document.querySelector("#sendBTN");
+
+        function addMessage(message, isUserMessage) {
+            const chatLi = document.createElement("li");
+            chatLi.classList.add("chat");
+            if (isUserMessage) {
+                chatLi.classList.add("chat-outgoing");
+            } else {
+                chatLi.classList.add("chat-ingoing");
+            }
+            const textnode = document.createTextNode(message)
+            const p=document.createElement("p");
+            p.appendChild(textnode);
+            chatLi.appendChild(p);
+            
+            chatBox.appendChild(chatLi);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message !== "") {
+                addMessage(message, true);
+                fetch("/api", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({message})
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        messageInput.value ="";
+                        const chatLi = document.createElement("li");
+                        chatLi.classList.add("chat");
+                        chatLi.classList.add("chat-ingoing");
+                        const p = document.createElement("p");
+                        p.textContent = data.content || data.error || "Không có phản hồi từ server.";
+                        chatLi.appendChild(p);
+                        chatBox.appendChild(chatLi);
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                        
+
+                       
+                    })
+                    .catch(error => console.error(error)); 
+            }
+        }
+        sendBtn.addEventListener("click", sendMessage);
+         messageInput.addEventListener("keydown", event => {
+            if (event.keyCode == 13 && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }) 
+        function cancel() {
+            let chatbotcomplete = document.querySelector(".chatBot");
+            if (chatbotcomplete.style.display != 'none') {
+                chatbotcomplete.style.display = "none";
+                let lastMsg = document.createElement("p");
+                lastMsg.textContent = 'Thanks for using our Chatbot!';
+                lastMsg.classList.add('lastMessage');
+                document.body.appendChild(lastMsg)
+            }
+            }
+    </script>
+</body>
+
+</html>
